@@ -5,10 +5,10 @@ date: "February 13, 2019"
 output: 
   html_document: 
     df_print: tibble
-    highlight: monochrome
+    highlight: tango
     number_sections: yes
     theme: journal
-    toc: true
+    toc: yes
 ---
 
 
@@ -215,6 +215,86 @@ ggplot(data_for_first_8_weeks, aes(Date, Value, color = factor(Store))) +
   facet_wrap(~Variable, scales = 'free_y') + 
   geom_point()
 
+
+```
+
+We now have a basic understanding of some of the main features of this dataset. Let's look at the training data. 
+
+## Summary Statistics and Groupwise Operations
+```{r}
+# This data has sales numbers for multiple departments per store. 
+head(train_data)
+
+# how many departments overall?
+n_distinct(train_data$Dept)
+
+# how many departments on average per stores?
+
+# this will group the train_data by store and apply a summary function over each store's data and combine the results
+group_by(train_data, Store) %>% 
+  # summarize applies a summary function to each group. This expects one result per group
+  summarize(
+    n_departments = n_distinct(Dept) # this counts the unique departments
+  ) %>% 
+  ungroup() %>% # remove the groups because we want to do a summary across the entire data.frame now
+  summarize(
+    mean_departments = mean(n_departments)
+  )
+
+
+
+
+```
+
+
+
+
+
+
+## Combine Data with Joins
+
+Now I have a good understanding of what's in my dataset. Let's combine the three sets of information we have, `stores_data`, `features_data`, and `train_data`. What are the common variables that can be used to match our data? To this point, we have used `Date` and `Store` as keys in our long dataset, and it just so happens that those are the columns that can be used to combine our three data sources together. 
+
+There are many types of joins and I won't be going over all the details here since there are other good introductions. [Here](https://stat545.com/bit001_dplyr-cheatsheet.html) is a helpful document that explains the different join types in more detail. 
+
+```{r}
+
+# let's combine all of the stores_data, features_data, and train_data
+
+# names() will give us a vector of column names for each data.frame
+names(stores_data)
+names(features_data)
+names(train_data)
+
+# are there any columns from stores in features?
+# the inner piece of this code checks all the columns of stores_data for whether they appear in features data and returns TRUE if so and FALSE if no. the any() function looks for a single 
+
+any(names(stores_data) %in% names(features_data))
+any(names(features_data) %in% names(train_data))
+any(names(stores_data) %in% names(train_data))
+
+# there are common names, which means joins can happen without any other fuss
+
+# The safest approach is to use left joins -- this keeps all rows in the "left" hand side data.frame and adds on data from matching rows on the right side (and no data on the right if a match isn't found)
+# let's join all three using a left_join, using train_data as the main data source 
+all_joined_data = left_join(features_data, stores_data, by = c('Store')) %>% 
+  left_join(train_data, by = c('Store', 'Date'))
+dim(train_data)
+head(train_data)
+dim(all_joined_data)
+dim(features_data)
+head(features_data)
+head(stores_)
+```
+
+Joins only work if the type of data being compared is the same. It's also possible to do joins using columns with different names. Other approaches work to do a join as well. `left_join()` and other `dyplyr` join functions will automatically detect common column names to do the join, but generally it's good practice to specify the columns to use to make sure it's clear how data is being combined. This is especially the case if you use limiting joins like `inner_join()`, which only keep rows that are found in both data sets. 
+
+Let's examine the new data.frame. 
+
+```{r}
+
+head(all_joined_data)
+tail(all_joined_data)
 
 ```
 
