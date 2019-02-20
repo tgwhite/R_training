@@ -1,0 +1,213 @@
+---
+title: "R Training"
+author: "Taylor G. White"
+date: "February 13, 2019"
+output: html_document
+toc: true
+---
+
+
+# Introduction 
+This is an intermediate level introduction to R, aimed at business analysts. It assumes you understand the basic syntax of the language, including how to create objects and run functions. 
+
+[DataCamp](https://campus.datacamp.com/courses/free-introduction-to-r/) has an interactive tutorial that will provide a good base to provide the necessary skills to make the most out of this tutorial.  
+
+This introduction will follow a realistic analysis of retail data that is provided freely on the internet. I wrote this document using something called [R Markdown](https://rmarkdown.rstudio.com/), which is a way to combine text and R code to generate dynamic reports in various formats. 
+
+## Installing R 
+DataCamp does not go into details on how to actually get R and RStudio up and running. Follow this [guide](https://www.ics.uci.edu/~sternh/courses/210/InstallingRandRStudio.pdf) to get moving. 
+
+# Load (and install) libraries for use
+
+```{r}
+# tidyverse contains a host of helpful packages that make data analysis in R a joy
+# install.packages() will download a package (and its dependencies)
+# install.packages('tidyverse')
+
+# use the library() function to make that code available in your session
+library(tidyverse)
+
+```
+
+# Import and combine data
+This directory contains a folder with several files that will be used in the initial analysis. 
+
+```{r}
+# list.files() will get the list of files in the current working directory
+list.files()
+
+# get the files in a specific folder:
+list.files('walmart-recruiting-store-sales-forecasting/')
+
+# get files with names matching a specific pattern (like csv for example) in the current directory or any subdirectory
+list.files(pattern = 'csv', recursive = T)
+
+stores_filename = list.files(pattern = 'stores', recursive = T) # note the recursive parameter is required, there is no stores data in the current directory
+
+features_filename = list.files(pattern = 'features', recursive = T)
+
+train_filename = list.files(pattern = 'train', recursive = T)
+
+# warning -- make sure your pattern searches don't return multiple files if you intend to use filenames to read in later
+
+```
+
+Let's import the stores.csv dataset. The first step is usually to open .csv files in excel or a similar program just to visually inspect the file for any irregularities (maybe there is information at the top of the file before the main data starts). This step can be done in R as well.
+
+## Import and inspect data
+```{r}
+# this will read the first ten lines of the stores file. The sep argument is the separator, or the character that splits individual data points. Since this is a .csv file, the actual separator is a comma (comma separated values), but I use a fake one (meaning the scan function will not split a value because the separator I chose isn't actually present) so you can see what the data looks like in the actual file.  
+scan(stores_filename, sep = '_', nlines = 10, what = 'character')
+
+# Since this looks like proper comma separated values, the data can be read in using a handy function from readr (loaded by tidyverse)
+stores_data = read_csv(stores_filename)
+
+# read_csv is similar to read.csv from base R, but it does some handy work to parse column formats (like dates)
+
+# lets look at the top and bottom of the data
+head(stores_data) 
+tail(stores_data)
+
+# let's look at the column classes (data types)
+sapply(stores_data, class) # this loops over every column and applies the class function
+
+### let's now read in the other two files 
+### By this point, I forgot what the variables were that I stored the other filenames in:
+ls() # prints out the objects in memory
+
+# notice I use structured and descriptive names for the objects I create. This helps with readability and reduces errors. 
+features_data = read_csv(features_filename)
+head(features_data)
+
+# R is very finicky about data types. This data.frame, features_data already has columns parsed into useful formats. Date has been parsed into "Date" class and predictors like Temperator and Fuel_Price have been parsed into numeric values. Commonly, prices might be saved as a character, e.g. "$10", in which case R would read that value as a character class vector. I'll say something later about gotchas like this.  
+
+sapply(features_data, class)
+# View(features_data) this will open the dataset in RStudio's viewer pane
+
+train_data = read_csv(train_filename)
+head(train_data)
+
+```
+By this point of the analysis, I have read in my main analytical files. `stores_data` has information about each store (albeit not much), `features_data` has weekly information about various predictors, from promotions, to economic predictors. `train_data` tells me which store/department combinations I should use to train for my models as well as their weekly sales. This is an important point -- in the real world, we want to predict events that haven't happened yet. In this case, we will have data that we have already fully observed. In order to replicate the fact that we won't be able to see the future (or some subset of events), we hold back some data to "test" the quality of our predictions. Once we have tested many different models, we can use the best performing ones (or a combination of them) to predict the future.  
+
+This is a good time to think about the problem at hand -- the goal is to predict weekly sales for stores/departments in the test dataset. Do we have all the data we need to make such predictions? Is there data elsewhere that can be used to shed light on this problem? 
+
+Further, do we really understand the data included here? Are gas prices reported nationally for a given week or are they particular to a given geography? Is unemployment reported nationally or regionally and at what frequency? What about the consumer price index (CPI)? This information can be obtained by visually inpecting individual data values, or by plotting data graphically. I prefer the latter approach. 
+
+## Exploratory Data Analysis (EDA) with Graphs
+```{r}
+# this step is unnecessary since ggplot2 is loaded by tidyverse, but this makes it clearer that I am using this graphics package
+library(ggplot2)
+
+# let's make a scatterplot of unemployment by week
+
+# ggplot is the main command. The first argument is the data.frame that contains the data your are plotting. 
+# aes() stands for aesthetics, and it sets up the overall rules for the plot -- which values will be used for # which features. 
+# geom_point() plots points on the chart, one for every combination of Date,Unemployment on the xy axis. 
+ggplot(features_data, aes(Date, Unemployment)) + 
+  geom_point()
+
+
+```
+
+This plot looks funky, but it is super informative. If unemployment were reported nationally, there would be one line of values, instead you can see many sub groupings. Second, if unemployment were reported weekly, there wouldn't be blocks of four repeating values -- what is happening is that each store has been matched with the relevant local unemployment rate but that rate is reported monthly. This matches with my understanding of how data is reported in government data. The St. Louis Federal Reserve publishes monthly level unemployment data by county on their [FRED](https://fred.stlouisfed.org/) website. More on this later. 
+
+What about gas prices, consumer prices, and temperature? One way to investigate is to have individual `ggplot` commands like the one above for each of the variables I want to investigate. But what if you had to do that for many columns? Your code would become hard to read and error prone very quickly.
+
+Another approach is to reformat this "wide" dataset into a long one, by pulling columns down and stacking the data for easy plotting. 
+
+## Reshape data
+```{r}
+
+# first, let's get down to the columns we actually need to do this analysis. 
+# select will extract only the desired columns from the data.frame
+selected_columns = select(features_data, Store, Date, Temperature, CPI, Fuel_Price, Unemployment)
+# much easier to look at
+head(selected_columns)
+
+# let's now convert this wide data into a long dataset, with Date, Store, Variable (which indicates which variable the value comes from) and Value as the new column names. This way, ggplot can use the Variable column to make a new plot for each variable, instead of having to call that function many times.   
+
+# this gather function is a bit confusing, I'll explain each piece 
+long_data = gather(
+  selected_columns,
+  # key = Variable tells the function what to call the column that specifies what is stored 
+  key = Variable, 
+  # value = Value tells the function what to call the value column (notice R is case sensitive!)
+  value = Value, 
+  # these next two lines say remove Store and Date from the operation. This means all other columns will be converted to a long format, but Store and Date will be used as identifiers
+  -Store, -Date)
+
+# that looks right!
+head(long_data)
+
+# what if I want to go back to the wide format? 
+back_to_wide = spread(long_data, key = Variable, value = Value)
+head(back_to_wide)
+```
+Ok now I have a long dataset for ggplot2, let's look at these other predictors: 
+
+## Separating Plots with Grids
+```{r}
+# this will make the same scatterplot for each variable, separating the plot into three sections using the Variable column. This looks like CPI and Temperature are by store (and not national) but it's hard to see what's happening with Fuel_Price. 
+ggplot(long_data, aes(Date, Value)) + 
+  facet_grid(aes(rows = Variable)) + 
+  geom_point()
+
+# Facet_wrap() allows for free scales between the different plotting regions
+ggplot(long_data, aes(Date, Value)) + 
+  facet_wrap(~Variable, scales = 'free_y') + 
+  geom_point()
+
+
+
+```
+
+From this view, it looks like `Temperature` and `Fuel_Prices` are weekly and Unemployment and CPI are monthly, though it's a bit hard to see individual data points at this high level. Let's subset the data to a two month period and identify individual stores in the plots to get a better view. 
+
+## Subset/Filter Data and Using the Pipe Operator (%>%)
+```{r}
+# sort the dates with the sort function and get the last 8 weeks
+
+# first, get the set of unique dates. Then sort those dates. Finally, first 8
+# This can be achieved in one line of code using pipes (%>%)
+
+first_8_weeks = unique(features_data$Date) %>% 
+  sort() %>% 
+  head(n = 8)
+
+# %>% takes the results of the prior function and feeds them into the first argument of the next function. Usually, functions have some sort of data argument as the first positional argument, so this is a convenient way to chain functions together in a linear fashion. Compare the code above to what you would have to do without pipes: 
+
+first_8_weeks = head(sort(unique(features_data$Date)), n = 8)
+
+# Imagine how much of a nighmare this would be if you had more than three functions! This would start to look like Excel! 
+
+# use filter to only keep the rows of features_data that have the latest_date
+data_for_first_8_weeks = filter(long_data, Date %in% first_8_weeks) # returns values where Date falls in the vector of the last 8 weeks
+
+# take a look at the size of the resulting dataset
+dim(data_for_first_8_weeks) # dim reports the number of rows and columns in a data.frame
+
+# how does this compare to the original? 
+dim(features_data)
+
+```
+Let's look at the filtered data now:
+
+## Plotting by Group
+```{r}
+# this adds an additional argument to the aesthetics called color. What this does is change the color of each point according to the store number. It also converts Store to a factor, which will treat Store as a discrete value (i.e. the values A, B, C are discrete, whereas 1,2,3 are continuous in scale). If you leave store as it is, ggplot will use a gradient to show a slightly increasing / decreasing color as the values of Store increase and decrease. 
+
+# plotted for the whole dataset
+ggplot(long_data, aes(Date, Value, color = factor(Store))) + 
+  facet_wrap(~Variable, scales = 'free_y') + 
+  geom_point()
+
+# plotted for the subset 
+
+ggplot(data_for_first_8_weeks, aes(Date, Value, color = factor(Store))) + 
+  facet_wrap(~Variable, scales = 'free_y') + 
+  geom_point()
+
+
+```
+
