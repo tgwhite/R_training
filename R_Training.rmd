@@ -2,7 +2,12 @@
 title: "R Training"
 author: "Taylor G. White"
 date: "February 13, 2019"
-output: html_document
+output: 
+  html_document: 
+    df_print: tibble
+    highlight: monochrome
+    number_sections: yes
+    theme: journal
 toc: true
 ---
 
@@ -149,11 +154,13 @@ Ok now I have a long dataset for ggplot2, let's look at these other predictors:
 ## Separating Plots with Grids
 ```{r}
 # this will make the same scatterplot for each variable, separating the plot into three sections using the Variable column. This looks like CPI and Temperature are by store (and not national) but it's hard to see what's happening with Fuel_Price. 
+
 ggplot(long_data, aes(Date, Value)) + 
   facet_grid(aes(rows = Variable)) + 
   geom_point()
 
 # Facet_wrap() allows for free scales between the different plotting regions
+
 ggplot(long_data, aes(Date, Value)) + 
   facet_wrap(~Variable, scales = 'free_y') + 
   geom_point()
@@ -166,11 +173,10 @@ From this view, it looks like `Temperature` and `Fuel_Prices` are weekly and Une
 
 ## Subset/Filter Data and Using the Pipe Operator (%>%)
 ```{r}
-# sort the dates with the sort function and get the last 8 weeks
-
 # first, get the set of unique dates. Then sort those dates. Finally, first 8
 # This can be achieved in one line of code using pipes (%>%)
 
+# getting the unique dates is super important, otherwise you would just be sorting ALL the dates (which repeat) so you'd only get the first 8 dates of the entire vector, which would be the same value repeated 8 times. 
 first_8_weeks = unique(features_data$Date) %>% 
   sort() %>% 
   head(n = 8)
@@ -179,7 +185,7 @@ first_8_weeks = unique(features_data$Date) %>%
 
 first_8_weeks = head(sort(unique(features_data$Date)), n = 8)
 
-# Imagine how much of a nighmare this would be if you had more than three functions! This would start to look like Excel! 
+# Imagine how much of a nighmare this would be if you had more than three functions, this would start to look like Excel! 
 
 # use filter to only keep the rows of features_data that have the latest_date
 data_for_first_8_weeks = filter(long_data, Date %in% first_8_weeks) # returns values where Date falls in the vector of the last 8 weeks
@@ -191,13 +197,14 @@ dim(data_for_first_8_weeks) # dim reports the number of rows and columns in a da
 dim(features_data)
 
 ```
-Let's look at the filtered data now:
+Let's look at the filtered data now.
 
 ## Plotting by Group
 ```{r}
 # this adds an additional argument to the aesthetics called color. What this does is change the color of each point according to the store number. It also converts Store to a factor, which will treat Store as a discrete value (i.e. the values A, B, C are discrete, whereas 1,2,3 are continuous in scale). If you leave store as it is, ggplot will use a gradient to show a slightly increasing / decreasing color as the values of Store increase and decrease. 
 
 # plotted for the whole dataset
+
 ggplot(long_data, aes(Date, Value, color = factor(Store))) + 
   facet_wrap(~Variable, scales = 'free_y') + 
   geom_point()
