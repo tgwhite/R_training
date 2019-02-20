@@ -283,8 +283,7 @@ dim(train_data)
 head(train_data)
 dim(all_joined_data)
 dim(features_data)
-head(features_data)
-head(stores_)
+
 ```
 
 Joins only work if the type of data being compared is the same. It's also possible to do joins using columns with different names. Other approaches work to do a join as well. `left_join()` and other `dyplyr` join functions will automatically detect common column names to do the join, but generally it's good practice to specify the columns to use to make sure it's clear how data is being combined. This is especially the case if you use limiting joins like `inner_join()`, which only keep rows that are found in both data sets. 
