@@ -7,13 +7,14 @@ output:
     df_print: tibble
     highlight: tango
     theme: readable
+    toc: true
+    toc_depth: 3
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 options(width = 120)
 ```
-# Introduction {.tabset .tabset-fade .tabset-pills}
 
 ## Tutorials
 

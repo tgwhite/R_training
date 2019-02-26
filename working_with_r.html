@@ -239,9 +239,27 @@ $(document).ready(function () {
 
 </div>
 
+<div id="TOC">
+<ul>
+<li><a href="#tutorials">Tutorials</a><ul>
+<li><a href="#get-started">Get Started</a></li>
+<li><a href="#exploratory-data-analysis-eda">Exploratory Data Analysis (EDA)</a></li>
+<li><a href="#advanced-manipulations">Advanced manipulations</a></li>
+<li><a href="#statistical-models">Statistical models</a></li>
+<li><a href="#machine-learning">Machine learning</a></li>
+</ul></li>
+<li><a href="#r-gotchas">R Gotchas</a><ul>
+<li><a href="#something-unexpected-is-happening">Something unexpected is happening!</a></li>
+<li><a href="#this-code-worked-the-first-time-but-it-isnt-working-now">This code worked the first time but it isn’t working now</a></li>
+<li><a href="#i-dont-understand-that-error">I don’t understand that error!</a></li>
+<li><a href="#nothing-is-working-and-im-freaking-out">Nothing is working and I’m freaking out!</a></li>
+<li><a href="#i-have-a-lot-to-do-and-dont-know-how-to-proceed">I have a lot to do and don’t know how to proceed!</a></li>
+<li><a href="#be-careful-with-factor-vectors">Be careful with <code>factor</code> vectors</a></li>
+</ul></li>
+<li><a href="#example-1---download-stock-prices-estimate-beta">Example 1 - Download stock prices, estimate beta</a></li>
+</ul>
+</div>
 
-<div id="introduction" class="section level1 tabset tabset-fade tabset-pills">
-<h1>Introduction</h1>
 <div id="tutorials" class="section level2">
 <h2>Tutorials</h2>
 <p>This tutorial includes both an aggregation of already available learning materials for the R language as well as real-world examples of R in use, aimed at business analysts.</p>
@@ -846,7 +864,6 @@ all_betas =<span class="st"> </span><span class="kw">lapply</span>(stock_tickers
 ## $TSLA
 ## [1] 0.9914795</code></pre>
 <p>Now you have your betas saved in a list and you can do what you want with them! Do these values make sense given what was seen in the scatterplot before? These betas are all very close, but they look consistent with the tight relationships we saw in the second scatterplot showing returns net of the risk free rate. All of these stocks have a strong relationship with the market. Now you can use these betas to build a portfolio.</p>
-</div>
 </div>
 
 
