@@ -1,0 +1,298 @@
+---
+title: "Working with R"
+author: "Taylor G. White"
+date: "February 24, 2019"
+output: 
+  html_document: 
+    df_print: tibble
+    highlight: tango
+    theme: readable
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(width = 120)
+```
+# Introduction {.tabset .tabset-fade .tabset-pills}
+
+## Tutorials
+
+This tutorial includes both an aggregation of already available learning materials for the R language as well as real-world examples of R in use, aimed at business analysts. 
+
+### Get Started 
+
+Download R and RStudio
+* [R](https://cloud.r-project.org/) 
+* [RStudio](https://www.rstudio.com/products/rstudio/download/) 
+
+Syntax, objects, functions
+What are the basic rules of the language? How are objects created? How do functions work? What controls the flow of operations that are completed?
+
+* [Good overall introduction](http://r-statistics.co/R-Tutorial.html) 
+* [Data types](https://www.statmethods.net/input/datatypes.html)
+* [Scripting style guide](http://adv-r.had.co.nz/Style.html)
+ 
+### Exploratory Data Analysis (EDA)
+Import data, take a look at it, compute basic summary statitics, filter/reshape your data, plot your data. 
+
+* [Data import](https://www.datacamp.com/community/tutorials/r-data-import-tutorial)
+* [Basic summary statistics](https://www.statmethods.net/stats/descriptives.html)
+* [Filter/subset, data reshape, groupwise operations](https://cran.r-project.org/web/packages/dplyr/vignettes/dplyr.html)
+* [More dplyr examples](https://dplyr.tidyverse.org/)
+* [Plotting with ggplot2](http://r-statistics.co/Complete-Ggplot2-Tutorial-Part1-With-R-Code.html)
+
+### Advanced manipulations
+Combine data from multiple sources for analysis. Clean your data for analysis, reshape it for different operations. 
+
+* [Combine data with joins](https://stat545.com/bit001_dplyr-cheatsheet.html)
+* [Tidying and reshaping data](http://garrettgman.github.io/tidying/)
+
+### Statistical models
+
+These methods are for fitting a given model to a set of data. These models are good for explaining relationships between quantities of interest and can be used for prediction. Each model is built for a particular purpose and they will not perform well if the assumptions underlying the model are violated. 
+
+* [Linear regression](https://www.statmethods.net/stats/regression.html) - Fit a linear model via ordinary least squares. 
+* [Logistic models](https://stats.idre.ucla.edu/r/dae/logit-regression/) - Discrete events (e.g. something happened or didn't happen)
+* [Poisson models](https://stats.idre.ucla.edu/r/dae/poisson-regression/) - Counting processes
+* [Time series models](https://www.datascience.com/blog/introduction-to-forecasting-with-arima-in-r-learn-data-science-tutorials) - Follow a single entity over time. Observations are correlated over time. 
+* [panel data analysis](https://www.princeton.edu/~otorres/Panel101R.pdf) - for data sets that follow entities (e.g. people, companies, countries) over time. 
+* [quantile regression](https://data.library.virginia.edu/getting-started-with-quantile-regression/) - OLS regression will find the conditional mean -- this method can find the conditional Nth percentile, e.g. 10% percentile, median, or 90th percentile. 
+* [Advanced parametric models](https://stats.idre.ucla.edu/other/dae/)
+
+### Machine learning
+
+These methods can help explain unseen relationships in data that parametric models might not capture. These methods are better for prediction than explanation, and often outperform patametric models in terms of prediction. The downside is you might not be able to explain your results to stakeholders, as many machine learning methods are black boxes. 
+
+* [Cluster analysis](https://www.statmethods.net/advstats/cluster.html) - create clusters of entities based on a host of variables
+* [Regression and classification trees](https://www.statmethods.net/advstats/cart.html) - Split data into homogenous groups and continue doing so until a split no longer produces meaningful differences. 
+* [Neural networks](https://beckmw.wordpress.com/tag/neuralnet/)
+* [Random forests](https://www.r-bloggers.com/how-to-implement-random-forests-in-r/) - In parallel, fit many regression trees on bootstrapped input datasets, using a subset of variables each time. Combine the results. 
+* [Boosted trees](https://xgboost.readthedocs.io/en/latest/R-package/xgboostPresentation.html) - In sequence, fit many small regression trees (not "full" trees with many splits) on bootstrapped input datasets. Combine the results. 
+
+## Gotchas with R
+
+### Something unexpected is happening! 
+* You ran a function and it is giving you strange output. Make sure that the `class()` of the object(s) you are operating on are what you expected and that it has the data you expect data.
+* Inspect your data. Print it to the console, look at the top and bottom of it. Use plots to visualize your whole dataset in various ways. Make sure you aren't making incorrect assumptions about your data. 
+* You changed your code in some way, and you are referring to something other than what you expected. Good and consistent naming conventions can help with these problems. 
+
+```{r, eval = F}
+# original code
+oldthing = 1 
+
+some_important_value = oldthing^2
+
+# updated code
+oldThing = 2
+
+some_important_value = oldthing^2 # still returns 1 if you didn't clear your environment! 
+
+```
+
+
+
+### This code worked the first time but it isn't working now
+You are likely modifying an object in place. This is usually bad and leads to strange errors. The value of the object `thing` is dependent on how many times you ran the `thing = thing + 2` line. This error is unlikely in this case, but it can happen with longer data prep code chunks. 
+
+```{r, eval = F}
+# This is modifying the object in place
+thing = 1
+
+thing = thing + 2
+```
+
+### I don't understand that error!
+Stackoverflow and Google are your friends. Copy the whole error and paste it into google. See what comes up. If nothing comes up, copy just the first part that isn't particular to your piece of code and see if a search engine finds something. Chances are, you have made a mistake someone else has made many times before. 
+
+### Nothing is working and I'm freaking out! 
+Relax. Take a break. Walk away from the code for a bit and come back to it when you have regained composure. Chances are, frantically changing bits of code will lead to even more problems. The way to uncover bugs is to isolate the changes you make in order to systematically test each chunk for issues. Frantic changes will mean you could fix one problem and introduce many others, leading you to believe the whole piece of code is broken in some fundamental way. 
+
+### I have a lot to do and don't know how to proceed! 
+Think before you write any code. Go to a piece of paper or whiteboard and map out the problem you are working on. When you have a decent grasp, write code in a piecewise fashion, instead of trying to tackle everything at once. Small, manageable code pieces that work can be wrapped in functions and pieced together. If there is an error, it's easy to trace that error to a particular function, instead of having to debug a large piece of [spaghetti](https://en.wikipedia.org/wiki/Spaghetti_code) code. 
+
+### Be careful with `factor` vectors
+Factors are essentially vectors that have some sort of label, saved as an integer, treated as a discrete value. Some processes will coerce factors back to integer values, which then would allow for numeric operations. Make sure weirdness isn't happening because of factors.  
+
+
+## Example 1 - Download stock prices, estimate beta
+
+This example demonstrates how to get publicly available data to estimate betas for a set of stock tickers. 
+
+Steps:
+
+* Get prices for multiple stocks: Chevron, ExxonMobile, First Solar Inc., GE, Tesla
+* Get values of the S&P 500 
+* Get values of the risk free interest rate
+* Compute monthly returns for all of these series
+* Combine data into a single dataset for analysis
+* Subject the risk free rate from asset and market returns
+* Regress stock returns in excess of the risk free rate from market returns in excess of the risk free rate
+* Extract coefficients from each model
+
+```{r}
+# Set up your script
+
+# load libraries 
+library(quantmod) # download data and other financial functions
+library(tidyverse) # host of data handling and visualization functions
+library(lubridate) # easier handling of dates
+library(scales) # nice scales for ggplot2
+
+# assign vectors of symbols to objects to be passed to quantmod's getSymbols() function
+stock_tickers_vec = c('CVX', 'XOM', 'FSLR', 'GE', 'TSLA')
+comparison_vec = c('^GSPC', '^IRX') # this has symbols for the SP500 and treasury bills
+
+```
+
+My intention is to run the same data preparation code for all of the symbols, so it wouldn't matter 
+if I had to do this process for 1 or 10,000 stock tickers. That being said, I always write out my code for the single case to test each piece before wrapping it into a function. 
+
+```{r}
+
+# download daily data for the S&P500, from 2010 to the current date using Yahoo finance data
+downloaded_data = getSymbols('^GSPC', auto.assign = F, src = 'yahoo', from = as.Date('2010-01-01'))
+
+# take a look at the data
+class(downloaded_data) # what type of object was downloaded?
+head(downloaded_data)
+tail(downloaded_data)
+
+# get the class of all the columns. This will loop over each column and apply the class function to that column
+sapply(downloaded_data, class) 
+
+# Calculate monthly returns. Make sure you know what the underlying values are. In some cases, it's stock prices, in some cases it's the value of an index. 
+monthly_returns = monthlyReturn(downloaded_data)
+head(monthly_returns)
+
+# convert the monthly return to a data.frame and add a date column using the index of the zoo/xts object
+returns_df = data.frame(
+  monthly_returns
+) %>%
+  rename(
+    return = monthly.returns # make a prettier name for the monthly.returns column
+  ) %>%
+  mutate(
+    # this will shift each date to the start of the month for simplicity of comparison
+    date = floor_date(index(monthly_returns), 'month') 
+  )
+
+head(returns_df) # everything looks good.
+
+
+```
+
+Now I want to "wrap" this code into a function, so I can run the same code efficiently without having to repeat my code many times, which will cause errors and headaches. 
+
+```{r}
+
+# create the name for your function. Use a verb to describe it
+# The only thing I need to do to get data for other tickers is to change the ticker that is fed through
+# This is captured in the first  parameter defined in the get_monthly_returns_function
+# The second parameter is from_date, which will determine how far back the data goes
+# This parameter has a default value, set to January 1, 2006
+
+get_monthly_returns = function(ticker, from_date = as.Date('2006-01-01')) {
+  
+  
+  # FIRST CHANGE - sp500 is changed to ticker here, so other tickers can be fed through
+  # I also changed the hard-coded from date to from_date, which allows for control of the 
+  # downloaded dates
+  downloaded_data = getSymbols(ticker, auto.assign = F, src = 'yahoo', from = from_date)
+  
+  # SECOND CHANGE -  no need to take a look at the data within the function anymore
+  
+  # calculate monthly returns
+  monthly_returns = monthlyReturn(downloaded_data)
+  
+  # convert the monthly return to a data.frame and add a date column using the index of the zoo/xts object
+  returns_df = data.frame(
+    monthly_returns
+  ) %>%
+    rename(
+      return = monthly.returns # make a prettier name for the monthly.returns column
+    ) %>%
+    mutate(
+      # this will shift each date to the start of the month for simplicity of comparison
+      date = floor_date(index(monthly_returns), 'month'),
+      
+      # !!!!!
+      # THIRD CHANGE -- I'm adding the ticker to the returns_df, to help keep track of 
+      # which data I downloaded. This is super importantant, and helps make sure you know what data
+      # you have. 
+      ticker = ticker 
+    )
+  
+  return(returns_df) # this is what the function gives us or "returns"
+}
+
+```
+
+Did you notice the `%>%` operator in the code chunk above? That is called a pipe, and it helps make super clean code. It takes the results of one operation (function call) and "pipes" those results to the first argument of the next function. This allows code to be chained together linearly, from one step to the next. This stops a never ending series of parentheses. 
+
+Now I have this nice function that can download daily values of data using yahoo finance. How can I use it?
+
+Download data for one ticker, Tesla: 
+```{r}
+tesla_returns = get_monthly_returns('TSLA')
+```
+
+What about all the tickers? I want to download all of the data and "stack" the returns for efficient analysis. I will feed all of the stock tickers to this function I created and combine the results. 
+
+```{r}
+
+# lapply will loop over an input vector, feeding each element to the first argument of a function
+# it will return results as a list, which is a handy type of object that can hold anything you like 
+
+all_monthly_stock_returns = lapply(stock_tickers_vec, get_monthly_returns)
+
+# all_monthly_stock_returns is a list. How can you access data within a list? 
+class(all_monthly_stock_returns)
+
+# look at the data in the first element
+all_monthly_stock_returns[[1]] %>% head()
+
+```
+Each element of the `all_monthly_stock_returns` list is the `data.frame` returned by `get_monthly_returns`. How can this data be converted to a `data.frame` for analysis? 
+
+```{r}
+# bind rows will stack data.frame objects on top of each other. It accepts a series of data.frame objects or a list of data.frame objects
+all_monthly_stock_returns_stacked = bind_rows(all_monthly_stock_returns)
+
+# take a look at the stacked data
+head(all_monthly_stock_returns_stacked)
+tail(all_monthly_stock_returns_stacked)
+
+# look at the counts for each ticker
+table(all_monthly_stock_returns_stacked$ticker)
+
+```
+Now that we have all the stock data combined, we can do additional analysis on the data. I like to start by making plots of the data I have, which helps me understand the data I just downloaded, both in terms of how variables relate to each other, and in terms of accuracy (strangeness in data comes out very quickly when you plot all of it). 
+
+```{r}
+
+# ggplot is from the ggplot2 package, a (the) premier library for static plots
+
+# the ggplot function sets up the "rules" for the plot. 
+# The first argument is the data.frame to be used
+# the next argument is aes(), which stands for aesthetics. This says which values should be passed
+# on to other "geom_" functions, or layers of the plot for use
+# here, date is the x variable, return is the y variable, and the data is plotted by group, using ticker
+
+ggplot(data = all_monthly_stock_returns_stacked, aes(x = date, y = return, group = ticker)) + 
+  geom_line()
+
+```
+
+This plot shows one line for each stock ticker that represents monthly returns. I don't see any weird discontinuities and the variability looks like what I would generally expect for stock returns. 
+
+
+
+
+## Example 2: Simulate and analyze competitive dynamics
+Stuff
+
+## Example 3: Predict weekly retail sales
+Stuff
+
+## Example 4: Analyze CO2 emissions
+
