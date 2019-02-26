@@ -143,7 +143,6 @@ library(scales) # nice scales for ggplot2
 
 # assign vectors of symbols to objects to be passed to quantmod's getSymbols() function
 stock_tickers_vec = c('CVX', 'XOM', 'FSLR', 'GE', 'TSLA')
-comparison_vec = c('^GSPC', '^IRX') # this has symbols for the SP500 and treasury bills
 
 ```
 
@@ -308,33 +307,28 @@ ggplot(all_monthly_stock_returns_stacked, aes(date, return)) +
 
 This data makes sense to me - larger, more established companies have much less variation in monthly returns than TSLA and FSLR. Data is available at regular intervals. 
 
-The next step is to get data for the S&P 500 and the risk free interest rate, which we will call the 13 week treasury bill rate. The same `get_monthly_returns` function can handle this. 
-
-```{r}
-comparison_returns_stacked = lapply(comparison_vec, get_monthly_returns) %>%
-  bind_rows()
-```
-
-Running the function above resulted in a warning message that there are `NA` values in the daily data for the 13 week treasury bill rate obtained via Yahoo Finance. `NA` means "missing" in R and there are multiple ways to deal with this. As the warning says, one can exclude these values with `na.omit()` or fill in missing values via interpolation with `na.approx()` (model the series and predict within sample to fill in those values) or via filling in values with `na.fill()` which carries the last value of the series forward. 
-
-Another approach is to use a different source for this time series -- there shouldn't be missing values. `quantmod` has other options for public data sources. The St. Louis Federal Reserve has a data repository called [FRED](https://fred.stlouisfed.org/) and `quantmod` can pull data from that repository programmatically. I went to FRED and typed in "treasury bill rate" in the seach bar and was presented with a set of options for time series that match that description. The first series is what I want: "3-Month Treasury Bill: Secondary Market Rate." Clicking the "daily" option leads me to the following view: 
+The next step is to get data for the S&P 500 and the risk free interest rate, which we will call the 13 week treasury bill rate. The same `get_monthly_returns` function can work for the S&P 500, and I'll use getSymbols() directly for the treasury rate with the St. Louis Federal Reserve ( [FRED](https://fred.stlouisfed.org/) ) as a source. To download FRED data, I went to FRED and typed in "treasury bill rate" in the seach bar and was presented with a set of options for time series that match that description. The first series is what I want: "3-Month Treasury Bill: Secondary Market Rate." Clicking the "monthly" option leads me to the following view: 
 
 ![fred_screencap](FRED Treasury Bill Screencap.png)
-Note the url: https://fred.stlouisfed.org/series/DTB3. The end of the URL (DTB3) represents the identifier for the time series, which is what we will pass to quantmod to get data from FRED. As an aside, this is essentially how I got data from Yahoo finance for the S&P 500 and the 3 month treasury bill rate as well. I searched for these series and found the ticker representation for those values.
+Note the url: https://fred.stlouisfed.org/series/TB3MS. The end of the URL (TB3MS) represents the identifier for the time series, which is what we will pass to quantmod to get data from FRED. As an aside, this is essentially how I got data from Yahoo finance for the S&P 500 and the 3 month treasury bill rate as well. I searched for these series and found the ticker representation for those values.
 
 ```{r}
 
 # download monthly returns for the S&P 500
 sp500 = get_monthly_returns('^GSPC')
 
-# get the monthly risk free rate from fred. How did I know to pass "FRED"?
-# ?getSymbols will tell you the options for that function, I simply
-# fed it the fred option that it expected
-rf_rate = get_monthly_returns('DTB3', source = 'FRED')
-
+# get the monthly risk free rate from FRED
+rf_rate = getSymbols('TB3MS', src = 'FRED', auto.assign = F)
+rf_rate_adj = data.frame(
+  return = rf_rate/100, # the risk free rate is presented as a percent, needs to be in same terms as the returns
+  date = index(rf_rate)
+  ) %>% 
+  rename(
+    return = TB3MS
+  )
+tail(rf_rate_adj)
 
 ```
-Interestingly enough, FRED also reports missing values for the treasury bill rate. Since FRED is an official repository for public data, I will trust this result a bit more, but a more comprehensive analysis would investigate exactly which values are missing and how often that happens. In this case, I will include this data in the analysis. The effect of `NA` values in modeling is that the full observation (row) associated with missing data will be excluded from analysis. There are other approaches to fill in data for missing values as alluded to above, but that's beyond the scope of this tutorial.
 
 Now that I have all the data I need, I want to combine them for analysis. Since I want to run regressions of the form `(stock return - risk free rate) = alpha + beta(market_return - risk free rate) + error`, I need to have each stock return associated with the relevant risk free rate and market return for that month. We need to keep in mind that the stock returns are currently stacked on top of each other, so we can't simply run a regression with all that data -- we need to split the data by ticker and run each regression. There are efficient ways to do that in R, so it makes sense to keep those as a "long" `data.frame`. 
 
@@ -346,8 +340,7 @@ First, let's combine the S&P 500 data and the risk free rate. In this case, I wa
 # get rid of columns I don't want
 # rename columns to something different
 # use a left join to pull all the data together
-joined_comparators = 
-  select(rf_rate, -ticker) %>% # get rid of the ticker column with the minus sign
+joined_comparators = rf_rate_adj %>%
   rename(
     rf_rate_return = return # rename the return column to rf_rate_return 
   ) %>% 
@@ -429,9 +422,7 @@ ggplot(all_joined_analysis_data, aes(sp500_net_rf, return_net_rf)) +
     subtitle = 'Net of risk free returns'
   ) + 
   scale_y_continuous(labels = percent) + 
-  scale_x_continuous(labels = percent) + 
-  # this zooms the plot in -- there were some values way out there!
-  coord_cartesian(xlim = c(-1, 1), ylim = c(-1,1)) 
+  scale_x_continuous(labels = percent) 
 
 ```
  
@@ -501,4 +492,4 @@ print(all_betas)
 
 
 ```
-Now you have your betas saved in a list and you can do what you want with them! Do these values make sense given what was seen in the scatterplot before? These betas are all very close, but they look consistent with the tight relationships we saw in the second scatterplot showing returns net of the risk free rate. All of these stocks have a strong relationship with the market. Now you can use these betas to build a portfolio. 
+Now you have your betas saved in a list and you can do what you want with them! Do these values make sense given what was seen in the scatterplot before? Now you can use these betas to build a portfolio. 
