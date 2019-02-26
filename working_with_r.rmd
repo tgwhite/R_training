@@ -21,11 +21,13 @@ This tutorial includes both an aggregation of already available learning materia
 
 ### Get Started 
 
-Download R and RStudio
+_Download R and RStudio_
+
 * [R](https://cloud.r-project.org/) 
 * [RStudio](https://www.rstudio.com/products/rstudio/download/) 
 
-Syntax, objects, functions
+_Syntax, objects, functions_
+
 What are the basic rules of the language? How are objects created? How do functions work? What controls the flow of operations that are completed?
 
 * [Good overall introduction](http://r-statistics.co/R-Tutorial.html) 
@@ -61,15 +63,15 @@ These methods are for fitting a given model to a set of data. These models are g
 
 ### Machine learning
 
-These methods can help explain unseen relationships in data that parametric models might not capture. These methods are better for prediction than explanation, and often outperform patametric models in terms of prediction. The downside is you might not be able to explain your results to stakeholders, as many machine learning methods are black boxes. 
+These methods can help explain unseen relationships in data that parametric models might not capture. These methods are better for prediction than explanation, and often outperform parametric models in terms of prediction. The downside is you might not be able to explain your results to stakeholders, as many machine learning methods are black boxes. 
 
 * [Cluster analysis](https://www.statmethods.net/advstats/cluster.html) - create clusters of entities based on a host of variables
-* [Regression and classification trees](https://www.statmethods.net/advstats/cart.html) - Split data into homogenous groups and continue doing so until a split no longer produces meaningful differences. 
+* [Regression and classification trees](https://www.statmethods.net/advstats/cart.html) - Split data into homogeneous groups and continue doing so until a split no longer produces meaningful differences. 
 * [Neural networks](https://beckmw.wordpress.com/tag/neuralnet/)
 * [Random forests](https://www.r-bloggers.com/how-to-implement-random-forests-in-r/) - In parallel, fit many regression trees on bootstrapped input datasets, using a subset of variables each time. Combine the results. 
 * [Boosted trees](https://xgboost.readthedocs.io/en/latest/R-package/xgboostPresentation.html) - In sequence, fit many small regression trees (not "full" trees with many splits) on bootstrapped input datasets. Combine the results. 
 
-## Gotchas with R
+## R Gotchas
 
 ### Something unexpected is happening! 
 * You ran a function and it is giving you strange output. Make sure that the `class()` of the object(s) you are operating on are what you expected and that it has the data you expect data.
@@ -118,16 +120,16 @@ Factors are essentially vectors that have some sort of label, saved as an intege
 
 This example demonstrates how to get publicly available data to estimate betas for a set of stock tickers. 
 
-Steps:
+_Steps_
 
 * Get prices for multiple stocks: Chevron, ExxonMobile, First Solar Inc., GE, Tesla
 * Get values of the S&P 500 
 * Get values of the risk free interest rate
 * Compute monthly returns for all of these series
 * Combine data into a single dataset for analysis
-* Subject the risk free rate from asset and market returns
+* Subtract the risk free rate from asset and market returns
 * Regress stock returns in excess of the risk free rate from market returns in excess of the risk free rate
-* Extract coefficients from each model
+* Extract betas from each model
 
 ```{r}
 # Set up your script
@@ -190,14 +192,15 @@ Now I want to "wrap" this code into a function, so I can run the same code effic
 # This is captured in the first  parameter defined in the get_monthly_returns_function
 # The second parameter is from_date, which will determine how far back the data goes
 # This parameter has a default value, set to January 1, 2006
+# The third parameter is passed to getSymbols and indicates the source of the data. The default is set to yahoo
 
-get_monthly_returns = function(ticker, from_date = as.Date('2006-01-01')) {
+get_monthly_returns = function(ticker, from_date = as.Date('2006-01-01'), source = 'yahoo') {
   
   
   # FIRST CHANGE - sp500 is changed to ticker here, so other tickers can be fed through
   # I also changed the hard-coded from date to from_date, which allows for control of the 
   # downloaded dates
-  downloaded_data = getSymbols(ticker, auto.assign = F, src = 'yahoo', from = from_date)
+  downloaded_data = getSymbols(ticker, auto.assign = F, src = source, from = from_date)
   
   # SECOND CHANGE -  no need to take a look at the data within the function anymore
   
@@ -285,14 +288,216 @@ ggplot(data = all_monthly_stock_returns_stacked, aes(x = date, y = return, group
 
 This plot shows one line for each stock ticker that represents monthly returns. I don't see any weird discontinuities and the variability looks like what I would generally expect for stock returns. 
 
+One thing about this plot is it's difficult to determine which line belonds to which stock. `ggplot2` makes it easy to plot groups of data, either by assinging different colors to values within a group, or by separating series into their own panels (or facets).
 
 
+```{r}
 
-## Example 2: Simulate and analyze competitive dynamics
-Stuff
+# This version of the plot will group and color each line according to ticker
+ggplot(all_monthly_stock_returns_stacked, aes(date, return, color = ticker)) + 
+  geom_line()
 
-## Example 3: Predict weekly retail sales
-Stuff
+# This version of the plot will split the lines into their own facets by ticker
+ggplot(all_monthly_stock_returns_stacked, aes(date, return)) +
+  facet_wrap(~ticker) + 
+  geom_line()
 
-## Example 4: Analyze CO2 emissions
 
+```
+
+This data makes sense to me - larger, more established companies have much less variation in monthly returns than TSLA and FSLR. Data is available at regular intervals. 
+
+The next step is to get data for the S&P 500 and the risk free interest rate, which we will call the 13 week treasury bill rate. The same `get_monthly_returns` function can handle this. 
+
+```{r}
+comparison_returns_stacked = lapply(comparison_vec, get_monthly_returns) %>%
+  bind_rows()
+```
+
+Running the function above resulted in a warning message that there are `NA` values in the daily data for the 13 week treasury bill rate obtained via Yahoo Finance. `NA` means "missing" in R and there are multiple ways to deal with this. As the warning says, one can exclude these values with `na.omit()` or fill in missing values via interpolation with `na.approx()` (model the series and predict within sample to fill in those values) or via filling in values with `na.fill()` which carries the last value of the series forward. 
+
+Another approach is to use a different source for this time series -- there shouldn't be missing values. `quantmod` has other options for public data sources. The St. Louis Federal Reserve has a data repository called [FRED](https://fred.stlouisfed.org/) and `quantmod` can pull data from that repository programmatically. I went to FRED and typed in "treasury bill rate" in the seach bar and was presented with a set of options for time series that match that description. The first series is what I want: "3-Month Treasury Bill: Secondary Market Rate." Clicking the "daily" option leads me to the following view: 
+
+![fred_screencap](FRED Treasury Bill Screencap.png)
+Note the url: https://fred.stlouisfed.org/series/DTB3. The end of the URL (DTB3) represents the identifier for the time series, which is what we will pass to quantmod to get data from FRED. As an aside, this is essentially how I got data from Yahoo finance for the S&P 500 and the 3 month treasury bill rate as well. I searched for these series and found the ticker representation for those values.
+
+```{r}
+
+# download monthly returns for the S&P 500
+sp500 = get_monthly_returns('^GSPC')
+
+# get the monthly risk free rate from fred. How did I know to pass "FRED"?
+# ?getSymbols will tell you the options for that function, I simply
+# fed it the fred option that it expected
+rf_rate = get_monthly_returns('DTB3', source = 'FRED')
+
+
+```
+Interestingly enough, FRED also reports missing values for the treasury bill rate. Since FRED is an official repository for public data, I will trust this result a bit more, but a more comprehensive analysis would investigate exactly which values are missing and how often that happens. In this case, I will include this data in the analysis. The effect of `NA` values in modeling is that the full observation (row) associated with missing data will be excluded from analysis. There are other approaches to fill in data for missing values as alluded to above, but that's beyond the scope of this tutorial.
+
+Now that I have all the data I need, I want to combine them for analysis. Since I want to run regressions of the form `(stock return - risk free rate) = alpha + beta(market_return - risk free rate) + error`, I need to have each stock return associated with the relevant risk free rate and market return for that month. We need to keep in mind that the stock returns are currently stacked on top of each other, so we can't simply run a regression with all that data -- we need to split the data by ticker and run each regression. There are efficient ways to do that in R, so it makes sense to keep those as a "long" `data.frame`. 
+
+First, let's combine the S&P 500 data and the risk free rate. In this case, I want these values side by side (joined) by date. Right now, the data isn't quite set up to cleanly join these two `data.frame` objects - I have a date that can be used for a join (see the joins tutorial for an in-depth presentation) but I have columns that have the same name. If I were to simply join these, I'd have funky column names, e.g. `return` and `return.1` or something like that to identify which table the column came from. Further, `dplyr` join functions automatically will join values based on column names, so this would attempt to join by return and ticker, which would result in zero matches. 
+
+```{r}
+
+# I can do everything in one step: 
+# get rid of columns I don't want
+# rename columns to something different
+# use a left join to pull all the data together
+joined_comparators = 
+  select(rf_rate, -ticker) %>% # get rid of the ticker column with the minus sign
+  rename(
+    rf_rate_return = return # rename the return column to rf_rate_return 
+  ) %>% 
+  left_join(
+    # Pay attention to what is happening here
+    # I am doing the column dropping and renaming steps WITHIN the left_join call
+    # This means the join will happen on the result of these operations
+    select(sp500, -ticker) %>% 
+      rename(
+        sp500_return = return
+      )
+  )
+
+# Lets take a look at the result:
+head(joined_comparators)
+tail(joined_comparators)
+
+# How do the series compare? 
+ggplot(joined_comparators, aes(rf_rate_return, sp500_return)) + 
+  geom_point() + 
+  stat_smooth(method = 'lm') # add a linear model to summarize the relationship
+
+```
+
+Now we have our comparators ready, we can join this data onto the stock tickers using the date column. We don't have to worry about renaming any columns now -- the only common column is `date`. I use a left join again because that is the safest join -- it keeps all of the rows in the left hand side and only adds rows that match from the right. This allows one to see what data is potentially missing. 
+
+Additional steps should be taken to ensure that your dates look right -- it's easy for missing values to go unnoticed in important places. Are there any dates in the comparators that aren't found in the stock returns? We already know that the series go out further for the FRED data (notice the `head` of the comparators) because `getSymbols` for FRED didn't respect the `from` argument. 
+
+
+```{r}
+# setdiff will subtract two sets and find the values in the left hand side that 
+# aren't in the right side
+# letters is a default R object that contains the letters of the alphabet. 
+# letters[1:5] has the first 5 letters, letters[2:6] has 2-6. The difference is the first letter, 'a'
+# because a is in the left side and not the right
+setdiff(letters[1:5], letters[2:6])
+
+# lets check our dates:
+unique_stock_months = unique(all_monthly_stock_returns_stacked$date)
+unique_comparator_months = unique(joined_comparators$date)
+
+# all of the months in the stocks are found in the comparators! It's still possible for sp500 returns to be NA in some months though
+setdiff(unique_stock_months, unique_comparator_months)
+
+# lets join all of our data together and compute values net of the risk free rate! 
+all_joined_analysis_data = left_join(all_monthly_stock_returns_stacked, joined_comparators) %>%
+  mutate(
+    return_net_rf = return - rf_rate_return,
+    sp500_net_rf = sp500_return - rf_rate_return
+  )
+head(all_joined_analysis_data)
+tail(all_joined_analysis_data)
+
+```
+Now we have all of our data joined together for analysis. You may have noticed that a fair amount of work was required simply to get to this point. The typical refrain from professional analysts is that around 90% of your time is spent gathering and cleaning data, with the remainder spent on analyzing/modeling/interpretation. That's what makes R so important - you can automate data preparation steps and you can do complex manipulations super efficiently (once you are over the learning curve) compared to tools like Excel.
+
+Before we run our models, let's take one last look at our data for a sanity check. How do the series relate?
+
+```{r}
+
+# Market versus individual stocks
+ggplot(all_joined_analysis_data, aes(sp500_return, return)) + 
+  facet_wrap(~ticker, scales = 'free') + # allow each panel to have its own scale 
+  geom_point() + 
+  stat_smooth(method = 'lm') + 
+  labs(
+    x = 'Market Return', y = 'Stock Return', title = 'Market Returns vs. Individual Stocks'
+  ) + 
+  scale_y_continuous(labels = percent) + 
+  scale_x_continuous(labels = percent)
+
+# net of risk free rate
+ggplot(all_joined_analysis_data, aes(sp500_net_rf, return_net_rf)) + 
+  facet_wrap(~ticker, scales = 'free') + # allow each panel to have its own scale 
+  geom_point() + 
+  stat_smooth(method = 'lm') + 
+  labs(
+    x = 'Market Return', y = 'Stock Return', title = 'Market Returns vs. Individual Stocks',
+    subtitle = 'Net of risk free returns'
+  ) + 
+  scale_y_continuous(labels = percent) + 
+  scale_x_continuous(labels = percent) + 
+  # this zooms the plot in -- there were some values way out there!
+  coord_cartesian(xlim = c(-1, 1), ylim = c(-1,1)) 
+
+```
+ 
+As theory predicts, there is a strong relationship between the market returns and individual stock returns net of the risk free rate. Let's estimate those betas. We want to run a model for each subset of data and extract model coefficients. 
+
+As with before, I'll run some code for the single ticker case and then demonstrate how to do it for all tickers. 
+
+```{r}
+
+# subset to tesla
+tesla_subset = filter(all_joined_analysis_data, ticker == 'TSLA')
+head(tesla_subset)
+tail(tesla_subset)
+
+# fit linear model via OLS. To the left of ~ is the Y of the analysis, to the right are the Xs or predictors
+# data specifies the data to be used
+tesla_model = lm(return_net_rf ~ sp500_net_rf, data = tesla_subset)
+
+# this will provide a summary of the model
+summary(tesla_model)
+
+```
+The Estimate column shows the estimated coefficients for the intercept and the slope estimate (beta) for the market. We want to extract that value as our beta. 
+
+
+```{r}
+# this extracts just the coefficients
+coef(tesla_model)
+
+# you can also extract components from the summary function: 
+names(summary(tesla_model)) # this is what you can get
+
+# nice table of coefficient information with standard errors and t values
+summary(tesla_model)$coefficients
+
+# we just want the estimate for the market beta though. 
+
+# this is a numeric vector, but as we saw above, it has names for each element. 
+# USE THE NAMES TO EXTRACT DATA, NOT THE ELEMENT NUMBER
+class(coef(tesla_model))
+
+# using the name will make your life way easier in the long run. You can actually see what it is that you are doing and it's easier to catch mistakes
+tesla_beta = coef(tesla_model)['sp500_net_rf']
+print(tesla_beta)
+```
+Now we know how to get the beta for one stock, lets extract it for all of them in a loop! 
+
+```{r}
+# I'm down at the bottom of my script and I forgot the name of the vector
+# where I stored all the stock tickers
+# this function tells me what is in memory:
+ls()
+
+# loop over the stock tickers, subset the data, run the model, extract the beta
+all_betas = lapply(stock_tickers_vec, function(the_ticker){
+  ticker_sub = filter(all_joined_analysis_data, ticker == the_ticker)
+  the_model = lm(return_net_rf ~ sp500_net_rf, data = ticker_sub)
+  beta = coef(the_model)['sp500_net_rf']
+  names(beta) = NULL # get rid of the sp500_net_rf column name
+  return(beta)
+})
+
+# all betas is a list, let's give each element the name of the ticker it represents
+names(all_betas) = stock_tickers_vec
+
+print(all_betas)
+
+
+```
+Now you have your betas saved in a list and you can do what you want with them! Do these values make sense given what was seen in the scatterplot before? These betas are all very close, but they look consistent with the tight relationships we saw in the second scatterplot showing returns net of the risk free rate. All of these stocks have a strong relationship with the market. Now you can use these betas to build a portfolio. 
