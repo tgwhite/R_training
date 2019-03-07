@@ -52,7 +52,7 @@ What are the basic rules of the language? How are objects created? How do functi
 * [Scripting style guide](http://adv-r.had.co.nz/Style.html)
  
 ### Exploratory Data Analysis (EDA)
-Import data, take a look at it, compute basic summary statitics, filter/reshape your data, plot your data. 
+Import data, take a look at it, compute basic summary statistics, filter/reshape your data, plot your data. 
 
 * [Data import](https://www.datacamp.com/community/tutorials/r-data-import-tutorial)
 * [Basic summary statistics](https://www.statmethods.net/stats/descriptives.html)
@@ -68,9 +68,9 @@ Combine data from multiple sources for analysis. Clean your data for analysis, r
 
 ### Open Data Sources
 
-R has many pacakges for downloading data available publicly via API. 
+R has many packages for downloading data available publicly via API. 
 
-The St. Louis Federal Reserve (FRED) has publicly available data on economic and social matters, primarily in the United States but also globally. This data can be downloaded across many time frames (depending on how far back the time series go) and on various geographics levels (national, state, county, MSA). 
+The St. Louis Federal Reserve (FRED) has publicly available data on economic and social matters, primarily in the United States but also globally. This data can be downloaded across many time frames (depending on how far back the time series go) and on various geographic levels (national, state, county, MSA). 
 
 The World Bank has extensive economic, political, and social data on most of the countries in the world, though not all countries have robust statistical services. R's `WDI` package enables one to programmatically download statistics like economic growth, population, exchange rates, energy consumption, etc. This data is reported annually. 
 
@@ -85,7 +85,7 @@ Financial data can be downloaded from the `quantmod` package via open sources li
 
 ### Interactive Reports
 
-R has features to produce reports programatically. The great thing about this is that, with a click of a button, you can regenerate a report that will be based on whatever new data or inputs you choose, without having to spend time formatting Excel documents. This introduction was produced using RMarkdown, which is a way of combining ("knitting") text with R code. Documents can be made that show the underlying code or they can only show fully polished output for reports. 
+R has features to produce reports programmatically. The great thing about this is that, with a click of a button, you can regenerate a report that will be based on whatever new data or inputs you choose, without having to spend time formatting Excel documents. This introduction was produced using RMarkdown, which is a way of combining ("knitting") text with R code. Documents can be made that show the underlying code or they can only show fully polished output for reports. 
 
 Since RMarkdown allows one to create HTML files (which are read using web browsers), one can generate interactive plots for users to see without knowing any javascript or HTML. 
 
@@ -107,7 +107,7 @@ A common workflow that combines R and Excel is the following:
 3. Do data manipulation, calculations, plotting in R
 4. Export results back to Excel for your colleagues to use
 
-There are many R packages that can help with this work, but you should be careful about which ones you choose because they have additional depdencies (code they rely on to work). 
+There are many R packages that can help with this work, but you should be careful about which ones you choose because they have additional dependencies (code they rely on to work). 
 
 `openxlsx` is my all-around favorite for working with excel in R. It allows one to import data from Excel and Export data and images back to Excel, using only [RTools](https://cran.r-project.org/bin/windows/Rtools/) as a dependency. If all you need to do is read Excel data in R, you should use something simple like the `readxl` package. 
 
