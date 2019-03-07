@@ -1,7 +1,7 @@
 ---
-title: "Working with R (v1)"
+title: "Working with R"
 author: "Taylor G. White"
-date: "February 24, 2019"
+date: "March 7, 2019"
 output:
   html_document:
       df_print: tibble
@@ -77,7 +77,7 @@ R has many pacakges for downloading data available publicly via API. Some of the
 
 ### Interactive Reports
 
-R has features to produce reports programatically. The great thing about this is that, with a click of a button, you can regenerate a report that will be based on whatever new data or inputs you choose, without having to spend time formatting Excel documents. This introduction was produced using RMarkdown, which is a way of combining "knitting" text with R code. Documents can be made that show the underlying code or they can only show fully polished output for reports. 
+R has features to produce reports programatically. The great thing about this is that, with a click of a button, you can regenerate a report that will be based on whatever new data or inputs you choose, without having to spend time formatting Excel documents. This introduction was produced using RMarkdown, which is a way of combining ("knitting") text with R code. Documents can be made that show the underlying code or they can only show fully polished output for reports. 
 
 Since RMarkdown allows one to create HTML files (which are read using web browsers), one can generate interactive plots for users to see without knowing any javascript or HTML. 
 
