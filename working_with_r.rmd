@@ -1,19 +1,35 @@
 ---
-title: "Working with R"
+title: "Working with R (v1)"
 author: "Taylor G. White"
 date: "February 24, 2019"
-output: 
-  html_document: 
-    df_print: tibble
-    highlight: tango
-    theme: readable
-    toc: true
-    toc_depth: 3
+output:
+  html_document:
+      df_print: tibble
+      highlight: tango
+      theme: readable
+      toc: yes
+      toc_depth: 3
+      toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+urlcolor: blue    
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-options(width = 120)
+knitr::opts_chunk$set(echo = TRUE, dpi = 400)
+
+# 
+# html_document:
+#     df_print: tibble
+#     highlight: tango
+#     theme: readable
+#     toc: yes
+#     toc_depth: 3
+#   word_document:
+#     fig_width: 8
+#     toc: yes
+
 ```
 
 ## Tutorials
@@ -49,6 +65,45 @@ Combine data from multiple sources for analysis. Clean your data for analysis, r
 
 * [Combine data with joins](https://stat545.com/bit001_dplyr-cheatsheet.html)
 * [Tidying and reshaping data](http://garrettgman.github.io/tidying/)
+
+### Open Data Sources
+
+R has many pacakges for downloading data available publicly via API. Some of the most powerful examples are included below.
+
+* [FRED](https://cran.r-project.org/web/packages/fredr/vignettes/fredr.html)
+* [World Bank](https://cengel.github.io/gearup2016/worldbank.html)
+* [US Census](https://cran.r-project.org/web/packages/tidycensus/tidycensus.pdf)
+* [Quantmod financial data](https://www.quantmod.com/examples/intro/)
+
+### Interactive Reports
+
+R has features to produce reports programatically. The great thing about this is that, with a click of a button, you can regenerate a report that will be based on whatever new data or inputs you choose, without having to spend time formatting Excel documents. This introduction was produced using RMarkdown, which is a way of combining "knitting" text with R code. Documents can be made that show the underlying code or they can only show fully polished output for reports. 
+
+Since RMarkdown allows one to create HTML files (which are read using web browsers), one can generate interactive plots for users to see without knowing any javascript or HTML. 
+
+Last, R has a feature to create web applications using only R with a package called `shiny`. These allow users to expose their analytical work to the world for fully interactive use. 
+
+* [RMarkdown](https://rmarkdown.rstudio.com/articles_intro.html)
+* [HTML/Javascript widgets](http://www.htmlwidgets.org/showcase_leaflet.html)
+* [Shiny Web Applications](https://shiny.rstudio.com/gallery/)
+
+
+### Working with Excel in R
+
+Excel isn't going away anytime soon, but that doesn't mean you can't get away from Excel to do tasks that would otherwise be hard to do without a scripting language. I consider Excel a good tool for sharing information with colleagues and presenting data -- it shouldn't be used for complex calculations, data manipulation, or plotting if it can be avoided. 
+
+A common workflow that combines R and Excel is the following: 
+
+1. There is some existing business data in Excel
+2. Get data from Excel and import it to R
+3. Do data manipulation, calculations, plotting in R
+4. Export results back to Excel for your colleagues to use
+
+There are many R packages that can help with this work, but you should be careful about which ones you choose because they have additional depdencies (code they rely on to work). 
+
+`openxlsx` is my all-around favorite for working with excel in R. It allows one to import data from Excel and Export data and images back to Excel, using only [RTools](https://cran.r-project.org/bin/windows/Rtools/) as a dependency. If all you need to do is read Excel data in R, you should use something simple like the `readxl` package. 
+
+There are other R packages that interface with Excel, but these can cause additional headaches. Packages like `xlsx` and `XLConnect` rely on Java to connect to R packages. Most machines have Java installed, but there are often issues with getting the R environment to find the proper java.exe file to use. You're better off to just avoid this pain if you can.
 
 ### Statistical models
 
@@ -191,10 +246,10 @@ Now I want to "wrap" this code into a function, so I can run the same code effic
 # The only thing I need to do to get data for other tickers is to change the ticker that is fed through
 # This is captured in the first  parameter defined in the get_monthly_returns_function
 # The second parameter is from_date, which will determine how far back the data goes
-# This parameter has a default value, set to January 1, 2006
+# This parameter has a default value, set to January 1, 2010
 # The third parameter is passed to getSymbols and indicates the source of the data. The default is set to yahoo
 
-get_monthly_returns = function(ticker, from_date = as.Date('2006-01-01'), source = 'yahoo') {
+get_monthly_returns = function(ticker, from_date = as.Date('2010-01-01'), source = 'yahoo') {
   
   
   # FIRST CHANGE - sp500 is changed to ticker here, so other tickers can be fed through
