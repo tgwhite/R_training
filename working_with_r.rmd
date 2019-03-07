@@ -68,7 +68,15 @@ Combine data from multiple sources for analysis. Clean your data for analysis, r
 
 ### Open Data Sources
 
-R has many pacakges for downloading data available publicly via API. Some of the most powerful examples are included below.
+R has many pacakges for downloading data available publicly via API. 
+
+The St. Louis Federal Reserve (FRED) has publicly available data on economic and social matters, primarily in the United States but also globally. This data can be downloaded across many time frames (depending on how far back the time series go) and on various geographics levels (national, state, county, MSA). 
+
+The World Bank has extensive economic, political, and social data on most of the countries in the world, though not all countries have robust statistical services. R's `WDI` package enables one to programmatically download statistics like economic growth, population, exchange rates, energy consumption, etc. This data is reported annually. 
+
+The U.S. census occurs every 10 years and includes economic and social data about life in the U.S. In between each census, there is the American Community Survey (ACS), which captures data on a subset of the U.S. population and makes these estimates available for stakeholders (in 1, 3, and 5 year spans). This data can cover areas as large as the entire U.S. or as small as a city-block (census block). 
+
+Financial data can be downloaded from the `quantmod` package via open sources like FRED, Yahoo Finance, and if you have an account, Quandl. 
 
 * [FRED](https://cran.r-project.org/web/packages/fredr/vignettes/fredr.html)
 * [World Bank](https://cengel.github.io/gearup2016/worldbank.html)
@@ -127,7 +135,13 @@ These methods can help explain unseen relationships in data that parametric mode
 * [Random forests](https://www.r-bloggers.com/how-to-implement-random-forests-in-r/) - In parallel, fit many regression trees on bootstrapped input datasets, using a subset of variables each time. Combine the results. 
 * [Boosted trees](https://xgboost.readthedocs.io/en/latest/R-package/xgboostPresentation.html) - In sequence, fit many small regression trees (not "full" trees with many splits) on bootstrapped input datasets. Combine the results. 
 
-## R Gotchas
+## Learning R
+
+R is said to have a steep learning curve, but one is well-rewarded once you get over some of its idiosyncracies. The best advice I have to learn R (and any other language) is to take a little time every day to practice, even if its just for 30 minutes in the morning. Second, use R to solve actual problems that you have. Many introductions out there show you how to do things you don't ever need to do. This doesn't help one commit techniques to memory. Instead, work on a real-life problem you have and use Google as your ally. Search "how to do [x] in R" and you'll be presented with many articles from people that have worked on the same problems. 
+
+Aside from Google, your best ally to deal with problems you encounter is [StackOverflow](https://stackoverflow.com/), which is a programming help site. For statistical questions, go to [Cross Validated](https://stats.stackexchange.com/), which often has examples in R. 
+
+Below are some additional gotchas and helpful information you should be aware of.
 
 ### Something unexpected is happening! 
 * You ran a function and it is giving you strange output. Make sure that the `class()` of the object(s) you are operating on are what you expected and that it has the data you expect data.
